@@ -73,3 +73,47 @@ def fetch_ticker(symbol: str, asset_class: str) -> pd.DataFrame:
     return raw[available]
 
 
+# ── Main ─────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    all_frames: list[pd.DataFrame] = []
+
+    for asset_class, symbols in TICKERS.items():
+        class_frames: list[pd.DataFrame] = []
+
+        for symbol in symbols:
+            print(f"Fetching {symbol} ({asset_class})...")
+            df = fetch_ticker(symbol, asset_class)
+            if df.empty:
+                continue
+            class_frames.append(df)
+            all_frames.append(df)
+
+        if class_frames:
+            class_df = pd.concat(class_frames, ignore_index=True)
+            out_path  = DATA_DIR / f"{asset_class}.csv"
+            class_df.to_csv(out_path, index=False)
+            print(f"  -> saved {out_path}  ({len(class_df):,} rows, {len(class_frames)} tickers)")
+
+    if not all_frames:
+        print("No data fetched — check your internet connection.", file=sys.stderr)
+        sys.exit(1)
+
+    combined = pd.concat(all_frames, ignore_index=True)
+    combined_path = DATA_DIR / "all_tickers.csv"
+    combined.to_csv(combined_path, index=False)
+    print(f"\nAll tickers combined -> {combined_path}  ({len(combined):,} rows total)")
+
+    # Quick sanity-check summary
+    print("\n-- Row counts per ticker --")
+    summary = (
+        combined.groupby(["asset_class", "ticker"])
+        .size()
+        .reset_index(name="rows")
+        .sort_values(["asset_class", "ticker"])
+    )
+    print(summary.to_string(index=False))
+
+
+if __name__ == "__main__":
+    main()
