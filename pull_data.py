@@ -15,16 +15,19 @@ START = "2025-01-02"
 END   = "2026-05-01"  # None = today
 
 TICKERS: dict[str, list[str]] = {
-    "defense":      ["LMT", "RTX", "NOC"],
-    "energy":       ["XOM", "CVX", "USO", "CL=F"],
-    "airlines":     ["DAL", "UAL", "AAL"],
-    "shipping":     ["ZIM", "MATX"],
-    "safe_haven":   ["GLD", "TLT"],
-    "broad_market": ["SPY", "QQQ", "^VIX"],
-    "big_tech":     ["AAPL", "MSFT", "NVDA", "TSLA", "META"],
-    "healthcare":   ["JNJ", "PFE", "UNH", "MRK"],
+    "defense":        ["LMT", "RTX", "NOC", "GD"],
+    "drones_autonomy":["AVAV", "KTOS", "PLTR", "LHX"],
+    "cybersecurity":  ["CRWD", "PANW", "CIBR"],
+    "energy":         ["XOM", "CVX", "USO", "CL=F", "CCJ"],
+    "airlines":       ["DAL", "UAL", "AAL"],
+    "shipping":       ["HPGLY", "MATX", "FRO"],
+    "agri_food":      ["ADM", "BG", "NTR", "CF"],
+    "critical_mins":  ["MP"],
+    "safe_haven":     ["GLD", "TLT", "BTC-USD"],
+    "broad_market":   ["SPY", "QQQ", "^VIX"],
+    "big_tech":       ["AAPL", "MSFT", "NVDA", "TSLA", "META"],
+    "healthcare":     ["JNJ", "PFE", "UNH", "MRK"],
 }
-
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
