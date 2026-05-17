@@ -146,7 +146,7 @@ def main() -> None:
     with conn.cursor() as cur:
         cur.execute("DELETE FROM events")
         cur.executemany(
-            "INSERT INTO events (event_date, event_name, conflict, window_tag) VALUES (%s,%s,%s,%s,%s)",
+            "INSERT INTO events (event_date, event_name, conflict, window_tag) VALUES (%s,%s,%s,%s)",
             EVENTS,
         )
     conn.commit()
