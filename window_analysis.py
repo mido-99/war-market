@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+
 
 # ---- 1. Create temp window periods
 windows_str = """
@@ -102,3 +104,19 @@ prices_at_ends['end_price'] = prices_at_ends.set_index(
 
 
 # ---- 4. Calculate % for each ticker & rank in its class
+# Change Percentage
+prices_at_ends['pct_change'] = (prices_at_ends['end_price'] - prices_at_ends['start_price']).div(
+    prices_at_ends['start_price'].replace(0, np.nan)
+) * 100
+
+# Rank in Class
+prices_at_ends['rank_in_class'] = (
+    prices_at_ends.groupby(['window', 'asset_class'])['pct_change']
+    .rank(
+        method='max',
+        ascending=True
+        )
+)
+
+# Cast type int instead of float for cleanliness
+prices_at_ends['rank_in_class'] = prices_at_ends['rank_in_class'].astype(int)
