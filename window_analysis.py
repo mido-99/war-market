@@ -48,3 +48,57 @@ merged_df = cross_merged[
 merged_df = merged_df.drop(columns=["start", "end"])
 
 
+# ---- 3. Create df with first & last price for each ticker
+
+# Group by the identifiers, and calculate min/max on the date column
+first_last_df = (
+    merged_df.groupby(["ticker", "asset_class", "window"])
+    .agg(
+        first_date=("date", "min"), 
+        last_date=("date", "max")
+        )
+    .reset_index()
+    .sort_values(['window', 'asset_class'])
+)
+
+# Bring start_price and end_price from merged_df. We have 2 approaches
+
+# 1. the indexing Approach
+# Step A: Build the Search Index (The Phonebook)
+price_lookup = merged_df.set_index(['ticker', 'date'])['adj_close']
+
+prices_at_ends = first_last_df.copy()
+
+# Step B: Search for the Start Price
+prices_at_ends['start_price'] = prices_at_ends.set_index(
+    ['ticker', 'first_date']
+).index.map(price_lookup)
+
+# Step C: Search for the End Price
+prices_at_ends['end_price'] = prices_at_ends.set_index(
+    ['ticker', 'last_date']
+).index.map(price_lookup)
+
+# # 2. the merge Approach - commented out
+# # Step 1: Bring in the start_price
+# # We merge first_last_df with a sliced, renamed copy of merged_df
+# merged_start = first_last_df.merge(
+#     merged_df[["ticker", "date", "adj_close"]].rename(
+#         columns={"date": "first_date", "adj_close": "start_price"}
+#     ),
+#     on=["ticker", "first_date"],
+#     how="inner",
+# )
+
+# # Step 2: Bring in the end_price
+# # We merge our new table with another sliced, renamed copy of merged_df
+# prices_at_ends = merged_start.merge(
+#     merged_df[["ticker", "date", "adj_close"]].rename(
+#         columns={"date": "last_date", "adj_close": "end_price"}
+#     ),
+#     on=["ticker", "last_date"],
+#     how="inner",
+# )
+
+
+# ---- 4. Calculate % for each ticker & rank in its class
