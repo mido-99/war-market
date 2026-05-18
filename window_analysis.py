@@ -16,7 +16,7 @@ windows = [
 
 windows_periods = [
     {
-        'name': window.split(':')[0],
+        'window': window.split(':')[0],
         'start': window.split(':')[1].split('to')[0].strip(),
         'end': window.split(':')[1].split('to')[1].strip(),
     }
@@ -28,5 +28,23 @@ windows_df = pd.DataFrame(windows_periods)
 
 windows_df['start'] = pd.to_datetime(windows_df['start'])
 windows_df['end'] = pd.to_datetime(windows_df['end'])
+
+
+# ---- 2. Merge prices with window periods 
+prices_df = pd.read_csv('data/all_tickers.csv')
+
+# Step 1: Temporarily combine every single row of prices with every row of windows
+# This creates a giant combined table where every date is matched with all 5 windows
+cross_merged = prices_df.merge(windows_df, how="cross")
+
+# Step 2: Keep only the rows where the price date actually falls between the window dates
+# This acts exactly like our SQL: ON p.date BETWEEN wb.w_start AND wb.w_end
+merged_df = cross_merged[
+    (cross_merged["date"] >= cross_merged["start"])
+    & (cross_merged["date"] <= cross_merged["end"])
+]
+
+# Step 3: Clean up the extra date columns we don't need anymore
+merged_df = merged_df.drop(columns=["start", "end"])
 
 
