@@ -22,7 +22,7 @@ TICKERS: dict[str, list[str]] = {
     "drones_autonomy":["AVAV", "KTOS", "PLTR", "LHX", "RCAT", "AI", "IRDM"],
 
     # US leaders (CRWD, PANW), sector ETF (CIBR), Fortinet, Zscaler, SentinelOne, CyberArk (Israeli)
-    "cybersecurity":  ["CRWD", "PANW", "CIBR", "FTNT", "ZS", "S", "CYBR"],
+    "cybersecurity":  ["CRWD", "PANW", "CIBR", "FTNT", "ZS", "S", "OKTA"],
 
     # Integrated majors (XOM, CVX), crude ETF/futures (USO, CL=F), uranium (CCJ),
     # oilfield services (SLB, HAL), European majors (BP, SHEL)
@@ -32,7 +32,7 @@ TICKERS: dict[str, list[str]] = {
     "airlines":       ["DAL", "UAL", "AAL", "LUV", "ALK", "RYAAY"],
 
     # Hapag-Lloyd ADR, Matson, Frontline + ZIM (Israeli!), Star Bulk, Golden Ocean, Danaos
-    "shipping":       ["HPGLY", "MATX", "FRO", "ZIM", "SBLK", "GOGL", "DAC"],
+    "shipping":       ["HPGLY", "MATX", "FRO", "ZIM", "SBLK", "DSX", "DAC"],
 
     # Grain traders (ADM, BG), fertilizers (NTR, CF, MOS), ICL (Israeli miner/fertilizer),
     # crop protection (CTVA), equipment (DE)
@@ -103,27 +103,53 @@ def fetch_ticker(symbol: str, asset_class: str) -> pd.DataFrame:
     return raw[available]
 
 
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+def get_cached_tickers(csv_path: Path) -> set[str]:
+    """Return ticker symbols already present in a class CSV, empty set if file missing."""
+    if not csv_path.exists():
+        return set()
+    return set(pd.read_csv(csv_path, usecols=["ticker"])["ticker"].unique())
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:
     all_frames: list[pd.DataFrame] = []
 
     for asset_class, symbols in TICKERS.items():
-        class_frames: list[pd.DataFrame] = []
+        out_path = DATA_DIR / f"{asset_class}.csv"
+        cached   = get_cached_tickers(out_path)
 
+        new_frames: list[pd.DataFrame] = []
         for symbol in symbols:
+            if symbol in cached:
+                print(f"  [cached] {symbol} ({asset_class})")
+                continue
             print(f"Fetching {symbol} ({asset_class})...")
             df = fetch_ticker(symbol, asset_class)
             if df.empty:
                 continue
-            class_frames.append(df)
-            all_frames.append(df)
+            new_frames.append(df)
 
-        if class_frames:
-            class_df = pd.concat(class_frames, ignore_index=True)
-            out_path  = DATA_DIR / f"{asset_class}.csv"
+        # Combine cached CSV rows with any newly fetched frames
+        if cached and out_path.exists():
+            class_df = pd.concat(
+                [pd.read_csv(out_path, parse_dates=["date"])] + new_frames,
+                ignore_index=True,
+            )
+        elif new_frames:
+            class_df = pd.concat(new_frames, ignore_index=True)
+        else:
+            continue
+
+        if new_frames:
             class_df.to_csv(out_path, index=False)
-            print(f"  -> saved {out_path}  ({len(class_df):,} rows, {len(class_frames)} tickers)")
+            print(f"  -> saved {out_path}  ({len(class_df):,} rows, {class_df['ticker'].nunique()} tickers, {len(new_frames)} new)")
+        else:
+            print(f"  -> {out_path.name} unchanged ({class_df['ticker'].nunique()} tickers, all cached)")
+
+        all_frames.append(class_df)
 
     if not all_frames:
         print("No data fetched — check your internet connection.", file=sys.stderr)
