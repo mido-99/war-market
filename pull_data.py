@@ -15,18 +15,45 @@ START = "2025-01-02"
 END   = "2026-05-01"  # None = today
 
 TICKERS: dict[str, list[str]] = {
-    "defense":        ["LMT", "RTX", "NOC", "GD"],
-    "drones_autonomy":["AVAV", "KTOS", "PLTR", "LHX"],
-    "cybersecurity":  ["CRWD", "PANW", "CIBR"],
-    "energy":         ["XOM", "CVX", "USO", "CL=F", "CCJ"],
-    "airlines":       ["DAL", "UAL", "AAL"],
-    "shipping":       ["HPGLY", "MATX", "FRO"],
-    "agri_food":      ["ADM", "BG", "NTR", "CF"],
-    "critical_mins":  ["MP"],
-    "safe_haven":     ["GLD", "TLT", "BTC-USD"],
-    "broad_market":   ["SPY", "QQQ", "^VIX"],
-    "big_tech":       ["AAPL", "MSFT", "NVDA", "TSLA", "META"],
-    "healthcare":     ["JNJ", "PFE", "UNH", "MRK"],
+    # Prime contractors + shipbuilding (HII) + components (TDG) + defense IT (LDOS) + nuclear (BWXT) + Boeing
+    "defense":        ["LMT", "RTX", "NOC", "GD", "HII", "TDG", "LDOS", "BWXT", "BA"],
+
+    # UAS/drones (AVAV, KTOS, RCAT), defense AI (PLTR, AI=C3.ai), electronics (LHX), satellite comms (IRDM)
+    "drones_autonomy":["AVAV", "KTOS", "PLTR", "LHX", "RCAT", "AI", "IRDM"],
+
+    # US leaders (CRWD, PANW), sector ETF (CIBR), Fortinet, Zscaler, SentinelOne, CyberArk (Israeli)
+    "cybersecurity":  ["CRWD", "PANW", "CIBR", "FTNT", "ZS", "S", "CYBR"],
+
+    # Integrated majors (XOM, CVX), crude ETF/futures (USO, CL=F), uranium (CCJ),
+    # oilfield services (SLB, HAL), European majors (BP, SHEL)
+    "energy":         ["XOM", "CVX", "USO", "CL=F", "CCJ", "SLB", "HAL", "BP", "SHEL"],
+
+    # US big-3 + Southwest, Alaska, Ryanair ADR (European exposure)
+    "airlines":       ["DAL", "UAL", "AAL", "LUV", "ALK", "RYAAY"],
+
+    # Hapag-Lloyd ADR, Matson, Frontline + ZIM (Israeli!), Star Bulk, Golden Ocean, Danaos
+    "shipping":       ["HPGLY", "MATX", "FRO", "ZIM", "SBLK", "GOGL", "DAC"],
+
+    # Grain traders (ADM, BG), fertilizers (NTR, CF, MOS), ICL (Israeli miner/fertilizer),
+    # crop protection (CTVA), equipment (DE)
+    "agri_food":      ["ADM", "BG", "NTR", "CF", "MOS", "ICL", "CTVA", "DE"],
+
+    # Rare earths (MP), lithium (ALB, SQM, LAC), copper (FCX), diversified miner (RIO),
+    # uranium (UUUU, DNN, LEU)
+    "critical_mins":  ["MP", "ALB", "SQM", "FCX", "RIO", "UUUU", "DNN", "LEU", "LAC"],
+
+    # Gold (GLD), bonds long/short (TLT, SHY), broad bonds (AGG), silver (SLV),
+    # USD index (UUP), crypto (BTC-USD, ETH-USD)
+    "safe_haven":     ["GLD", "TLT", "BTC-USD", "SLV", "AGG", "SHY", "UUP", "ETH-USD"],
+
+    # US broad market (SPY, QQQ, DIA, IWM), volatility (^VIX), emerging markets (EEM)
+    "broad_market":   ["SPY", "QQQ", "^VIX", "DIA", "IWM", "EEM"],
+
+    # Original 5 + Alphabet, Amazon (defense cloud contracts), AMD (AI chips)
+    "big_tech":       ["AAPL", "MSFT", "NVDA", "TSLA", "META", "GOOGL", "AMZN", "AMD"],
+
+    # Original 4 + Abbott, AbbVie, Amgen, Medtronic (devices relevant for wartime medical demand)
+    "healthcare":     ["JNJ", "PFE", "UNH", "MRK", "ABT", "ABBV", "AMGN", "MDT"],
 }
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
