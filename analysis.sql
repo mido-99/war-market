@@ -149,6 +149,59 @@ ranked AS (
 )
 SELECT ticker, window_name, pct_change, asset_class, rank_in_class FROM ranked;
 
+
+-- =============================================================================
+-- SECTOR AVERAGES  AVG pct_change per asset_class per window
+-- (run after TRUNCATE + INSERT above)
+-- =============================================================================
+
+SELECT
+    window_name,
+    asset_class,
+    ROUND(AVG(pct_change), 4) AS avg_pct_change,
+    COUNT(*)                  AS ticker_count
+FROM ticker_windows
+GROUP BY window_name, asset_class
+ORDER BY window_name, avg_pct_change DESC;
+
+
+-- =============================================================================
+-- VIX DEEP-DIVE  Peak date, spike magnitude, and days to recover
+-- Baseline = window_1 average (pre-conflict)
 -- =============================================================================
 
 -- Part A: Peak VIX date and spike magnitude per window
+WITH vix_baseline AS (
+    SELECT ROUND(AVG(adj_close), 2) AS baseline_vix
+    FROM prices
+    WHERE ticker = '^VIX'
+      AND date BETWEEN '2025-01-02' AND '2025-06-12'
+),
+window_bounds AS (
+    SELECT 'window_2'::varchar(20) AS window_name, '2025-06-13'::date AS w_start, '2025-06-24'::date AS w_end
+    UNION ALL SELECT 'window_3', '2025-06-25', '2026-02-27'
+    UNION ALL SELECT 'window_4', '2026-02-28', '2026-04-07'
+    UNION ALL SELECT 'window_5', '2026-04-08', '2026-04-30'
+),
+vix_per_window AS (
+    SELECT
+        wb.window_name,
+        p.date,
+        p.adj_close AS vix_value,
+        ROW_NUMBER() OVER (PARTITION BY wb.window_name ORDER BY p.adj_close DESC) AS rn
+    FROM prices p
+    JOIN window_bounds wb ON p.date BETWEEN wb.w_start AND wb.w_end
+    WHERE p.ticker = '^VIX'
+)
+SELECT
+    v.window_name,
+    v.date                                    AS peak_date,
+    v.vix_value                               AS peak_vix,
+    vb.baseline_vix,
+    ROUND(v.vix_value - vb.baseline_vix, 2)  AS spike_magnitude
+FROM vix_per_window v
+CROSS JOIN vix_baseline vb
+WHERE v.rn = 1
+ORDER BY v.window_name;
+
+
