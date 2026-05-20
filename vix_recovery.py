@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 
+#-- Part A: Peak VIX date and spike magnitude per window
 # ---- 1. Create temp window periods -----------------
 windows_str = """
 window_2: 2025-06-13 to 2025-06-24
@@ -69,8 +70,39 @@ peaks_df = vix_per_window.loc[idx_max_vix].copy()
 peaks_df['baseline_vix'] = vix_baseline
 peaks_df['spike_magnitude'] = round(peaks_df['adj_close'] - vix_baseline, 4)
 
-final_df = peaks_df[[
+peaks_vix_df = peaks_df[[
     'window', 'date', 'adj_close', 'baseline_vix', 'spike_magnitude'
 ]].rename(columns={
     'date': 'peak_date', 'adj_close': 'peak_vix'
     })
+
+
+# -- Part B: Days to recover (calendar days from peak back to baseline)
+# 1. Merge peak date & vix into corresponding window
+recoery_vpw = vix_per_window.merge(
+    peaks_vix_df[['window', 'peak_date', 'peak_vix']],
+    on='window'
+    ).copy()
+
+# 2. Gather all potential recovery days STRICTLY within the window bounds
+recovery_days = recoery_vpw[
+    (recoery_vpw['adj_close'] <= vix_baseline) & 
+    (recoery_vpw['date'] > recoery_vpw['peak_date'])
+]
+
+# 3. Grab the earliest recovery day per window
+recovery_dates = recovery_days.sort_values('date').drop_duplicates(
+    subset=['window'], keep='first'
+    )
+
+# 4. MASTER LEFT JOIN: Start with your peaks, bring in recoveries if they exist
+final_result = peaks_vix_df.merge(
+    recovery_dates[['window', 'date']], 
+    on='window', 
+    how='left'
+).rename(columns={'date': 'recovery_date'})
+
+# 5. Calculate delta safely (Window 4 will naturally become NaN)
+final_result['days_to_recover'] = (
+    final_result['recovery_date'] - final_result['peak_date']
+    ).dt.days
