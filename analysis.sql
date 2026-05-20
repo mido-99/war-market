@@ -237,18 +237,20 @@ recovery AS (
         MIN(p.date) AS recovery_date
     FROM vix_peaks vp
     CROSS JOIN vix_baseline vb
+    JOIN window_bounds wb ON wb.window_name = vp.window_name
     JOIN prices p
       ON p.ticker = '^VIX'
      AND p.date > vp.peak_date
+     AND p.date <= wb.w_end
      AND p.adj_close <= vb.baseline_vix
     GROUP BY vp.window_name, vp.peak_date, vp.peak_vix
 )
 SELECT
-    r.window_name,
-    r.peak_date,
-    ROUND(r.peak_vix, 2)                AS peak_vix,
+    vp.window_name,
+    vp.peak_date,
+    ROUND(vp.peak_vix, 2)               AS peak_vix,
     r.recovery_date,
-    (r.recovery_date - r.peak_date)     AS days_to_recover
+    (r.recovery_date - vp.peak_date)    AS days_to_recover
 FROM vix_peaks vp
 LEFT JOIN recovery r USING (window_name)
 ORDER BY vp.window_name;
@@ -311,10 +313,12 @@ vix_recovery_candidates AS (
             ORDER BY p.date ASC
         ) AS recovery_rank
     FROM vix_peaks vp
+    JOIN window_bounds wb ON wb.window_name = vp.window_name
     INNER JOIN
         prices AS p ON p.ticker = '^VIX'
     WHERE
         p.date > vp.peak_date
+        AND p.date <= wb.w_end
         AND p.adj_close <= vp.baseline
 )
 SELECT
