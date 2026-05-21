@@ -18,6 +18,36 @@ WINDOW_LABELS = {
 
 WINDOW_ORDER = list(WINDOW_LABELS.keys())
 
+SECTOR_LABELS = {
+    "defense":         "Defense",
+    "drones_autonomy": "Drones & Autonomy",
+    "cybersecurity":   "Cybersecurity",
+    "energy":          "Energy",
+    "airlines":        "Airlines",
+    "shipping":        "Shipping",
+    "agri_food":       "Agriculture & Food",
+    "critical_mins":   "Critical Minerals",
+    "safe_haven":      "Safe Havens",
+    "broad_market":    "Broad Market",
+    "big_tech":        "Technology",
+    "healthcare":      "Healthcare",
+}
+
+SECTOR_COLORS = {
+    "Defense":            "#C0392B",  # military red
+    "Drones & Autonomy":  "#E74C3C",  # lighter red (war-adjacent tech)
+    "Cybersecurity":      "#2C3E50",  # dark slate (dark web / stealth)
+    "Energy":             "#E67E22",  # oil orange
+    "Airlines":           "#5DADE2",  # sky blue
+    "Shipping":           "#148F77",  # ocean teal
+    "Agriculture & Food": "#58D68D",  # plant green
+    "Critical Minerals":  "#85929E",  # steel gray
+    "Safe Havens":        "#D4AC0D",  # gold
+    "Broad Market":       "#7D3C98",  # neutral purple
+    "Technology":         "#1A5276",  # deep tech blue
+    "Healthcare":         "#F1948A",  # soft pink
+}
+
 
 def get_conn():
     return psycopg2.connect(
