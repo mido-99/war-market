@@ -65,6 +65,7 @@ def load_ticker_windows() -> pd.DataFrame:
     df = pd.read_sql("SELECT * FROM ticker_windows", conn)
     conn.close()
     df["window_label"] = df["window_name"].map(WINDOW_LABELS)
+    df["sector_label"] = df["asset_class"].map(SECTOR_LABELS).fillna(df["asset_class"])
     return df
 
 
@@ -77,7 +78,7 @@ st.set_page_config(
 )
 
 st.title("War Market Analysis")
-st.caption("US-Iran conflicts 2025–2026 — market impact across asset classes")
+st.markdown("**US-Iran conflicts 2025–2026 — market impact across asset classes**")
 
 # ── Load data ────────────────────────────────────────────────────────────────
 
@@ -102,12 +103,14 @@ with st.sidebar:
         "Sectors",
         options=all_sectors,
         default=all_sectors,
+        format_func=lambda s: SECTOR_LABELS.get(s, s),
     )
 
 # ── Filter ───────────────────────────────────────────────────────────────────
 
 filtered = df[
-    df["window_name"].isin(selected_windows) & df["asset_class"].isin(selected_sectors)
+    df["window_name"].isin(selected_windows) 
+    & df["asset_class"].isin(selected_sectors)
 ]
 
 if filtered.empty:
@@ -119,39 +122,66 @@ if filtered.empty:
 st.subheader("Sector Performance by Window")
 
 sector_avg = (
-    filtered.groupby(["window_name", "window_label", "asset_class"], sort=False)["pct_change"]
+    filtered.groupby(["window_name", "window_label", "sector_label"], sort=False)["pct_change"]
     .mean()
     .round(2)
     .reset_index()
     .rename(columns={"pct_change": "avg_pct_change"})
 )
 
-# Preserve chronological window order
+# Chronological window order on x-axis
 sector_avg["window_name"] = pd.Categorical(
     sector_avg["window_name"], categories=WINDOW_ORDER, ordered=True
 )
 sector_avg = sector_avg.sort_values("window_name")
 
+# Sector order: highest global avg first → lowest (most negative) last
+sector_global_avg = (
+    sector_avg.groupby("sector_label")["avg_pct_change"].mean().sort_values(ascending=False)
+)
+sector_order = sector_global_avg.index.tolist()
+
 fig = px.bar(
     sector_avg,
     x="window_label",
     y="avg_pct_change",
-    color="asset_class",
+    color="sector_label",
     barmode="group",
+    category_orders={"sector_label": sector_order},
+    color_discrete_map=SECTOR_COLORS,
     labels={
-        "window_label": "Window",
+        "window_label":   "Conflict Window",
         "avg_pct_change": "Avg % Change",
-        "asset_class": "Sector",
+        "sector_label":   "Sector",
     },
-    color_discrete_sequence=px.colors.qualitative.Safe,
 )
 
 fig.update_layout(
-    xaxis_tickangle=-20,
+    xaxis_tickangle=-10,
     legend_title_text="Sector",
     plot_bgcolor="rgba(0,0,0,0)",
     paper_bgcolor="rgba(0,0,0,0)",
-    yaxis=dict(zeroline=True, zerolinecolor="gray", zerolinewidth=1),
+    yaxis=dict(
+        title_text="",
+        zeroline=True,
+        zerolinecolor="gray",
+        zerolinewidth=1,
+    ),
+    margin=dict(t=60),
+    hoverlabel=dict(
+        font_size=14,
+        font_family="Arial, sans-serif",
+        )
+)
+
+# Y-axis label as horizontal annotation (avoids unreadable 90° rotation)
+fig.add_annotation(
+    text="Avg % Change",
+    xref="paper", yref="paper",
+    x=-0.01, y=1.07,
+    showarrow=False,
+    font=dict(size=13),
+    xanchor="right",
 )
 
 st.plotly_chart(fig, use_container_width=True)
