@@ -274,3 +274,64 @@ fig2.add_annotation(
 
 st.plotly_chart(fig2, use_container_width=True)
 
+# ── Chart 3: VIX spike ───────────────────────────────────────────────────────
+
+st.subheader("VIX Volatility Index")
+
+# Isolate VIX rows and trim to the visible window date range
+vix_df = prices_df[
+    (prices_df["ticker"] == "^VIX")
+    & (prices_df["date"] >= date_min)
+    & (prices_df["date"] <= date_max)
+].copy()
+
+if not vix_df.empty:
+    # Line chart for VIX daily close
+    fig3 = px.line(
+        vix_df,
+        x="date",
+        y="adj_close",
+        labels={"date": "Date", "adj_close": "VIX"},
+    )
+
+    # Draw vertical timeline markers only for events within the visible range
+    for ts, label in EVENT_DATES:
+        if date_min <= ts <= date_max:
+            fig3.add_vline(
+                x=ts.value // 10**6,
+                line_dash="dash",
+                line_color="#E74C3C",
+                annotation_text=label,
+                annotation_position="top right",
+                annotation_font_size=11,
+            )
+
+    # Style the VIX line — sky blue stands out against red event markers
+    fig3.update_traces(line_color="#5DADE2", line_width=2)
+
+    # Style: transparent background, consistent with other charts
+    fig3.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        yaxis=dict(
+            title_text="",
+            zeroline=False,
+        ),
+        margin=dict(t=60),
+        hoverlabel=dict(font_size=14, font_family="Arial, sans-serif"),
+    )
+
+    # Y-axis label as horizontal annotation (avoids unreadable 90° rotation)
+    fig3.add_annotation(
+        text="VIX Level",
+        xref="paper", yref="paper",
+        x=-0.05, y=1.07,
+        showarrow=False,
+        font=dict(size=13),
+        xanchor="left",
+    )
+
+    st.plotly_chart(fig3, use_container_width=True)
+else:
+    st.info("No VIX data for the selected window range.")
+
