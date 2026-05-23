@@ -335,3 +335,71 @@ if not vix_df.empty:
 else:
     st.info("No VIX data for the selected window range.")
 
+# ── Chart 4: Winners vs Losers ───────────────────────────────────────────────
+
+st.subheader("Winners & Losers — Top 5 / Bottom 5")
+
+# Average pct_change per ticker across all selected windows
+ticker_avg = (
+    filtered.groupby(["ticker", "sector_label"])["pct_change"]
+    .mean()
+    .round(2)
+    .reset_index()
+    .rename(columns={"pct_change": "avg_pct_change"})
+)
+
+# Isolate the 5 best and 5 worst performers
+top5    = ticker_avg.nlargest(5,  "avg_pct_change")
+bottom5 = ticker_avg.nsmallest(5, "avg_pct_change")
+
+# Combine and sort bottom-to-top so the chart reads worst → best
+wl = pd.concat([bottom5, top5]).sort_values("avg_pct_change").reset_index(drop=True)
+# drop=True prevents pandas from keeping old row index (e.g idx 42) into a useless data column
+
+# Horizontal bar chart — colored by sector for easy identification
+fig4 = px.bar(
+    wl,
+    x="avg_pct_change",
+    y="ticker",
+    orientation="h",
+    color="sector_label",
+    color_discrete_map=SECTOR_COLORS,
+    text="avg_pct_change",
+    labels={
+        "avg_pct_change": "Avg % Change",
+        "ticker":         "Ticker",
+        "sector_label":   "Sector",
+    },
+)
+
+# Add % labels on each bar, positioned outside
+fig4.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
+
+# Zero reference line to clearly separate gainers from losers
+fig4.add_vline(x=0, line_color="gray", line_width=1)
+
+# Style: transparent background, consistent with other charts
+fig4.update_layout(
+    plot_bgcolor="rgba(0,0,0,0)",
+    paper_bgcolor="rgba(0,0,0,0)",
+    legend_title_text="Sector",
+    yaxis=dict(title_text=""),
+    xaxis=dict(
+        title_text="",
+        zeroline=False,
+    ),
+    margin=dict(t=60, r=80),
+    hoverlabel=dict(font_size=14, font_family="Arial, sans-serif"),
+)
+
+# X-axis label as top-center annotation
+fig4.add_annotation(
+    text="Avg % Change",
+    xref="paper", yref="paper",
+    x=0.5, y=1.07,
+    showarrow=False,
+    font=dict(size=13),
+    xanchor="center",
+)
+
+st.plotly_chart(fig4, use_container_width=True)
