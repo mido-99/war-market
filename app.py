@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Human-readable window labels for sidebar display and chart axes
 WINDOW_LABELS = {
     "window_1": "1 · Pre-conflict baseline",
     "window_2": "2 · 12-Day War",
@@ -16,8 +17,10 @@ WINDOW_LABELS = {
     "window_5": "5 · Ceasefire / peace deal",
 }
 
+# Preserve insertion order so the x-axis stays chronological
 WINDOW_ORDER = list(WINDOW_LABELS.keys())
 
+# Map raw DB asset_class keys to display names
 SECTOR_LABELS = {
     "defense":         "Defense",
     "drones_autonomy": "Drones & Autonomy",
@@ -33,6 +36,7 @@ SECTOR_LABELS = {
     "healthcare":      "Healthcare",
 }
 
+# Brand colors per sector — kept consistent across all charts
 SECTOR_COLORS = {
     "Defense":            "#C0392B",  # military red
     "Drones & Autonomy":  "#E74C3C",  # lighter red (war-adjacent tech)
@@ -69,6 +73,7 @@ EVENT_DATES = [
 ]
 
 
+# Open a fresh psycopg2 connection using .env credentials
 def get_conn():
     return psycopg2.connect(
         host=os.getenv("DB_HOST", "localhost"),
@@ -79,6 +84,7 @@ def get_conn():
     )
 
 
+# Pull pre-computed % changes and rank per ticker per window
 @st.cache_data(ttl=300)
 def load_ticker_windows() -> pd.DataFrame:
     conn = get_conn()
@@ -119,6 +125,7 @@ st.markdown("**US-Iran conflicts 2025–2026 — market impact across asset clas
 df = load_ticker_windows()
 prices_df = load_prices()
 
+# Build filter option lists from actual data in DB
 all_windows = WINDOW_ORDER
 all_sectors = sorted(df["asset_class"].dropna().unique().tolist())
 
@@ -144,7 +151,7 @@ with st.sidebar:
 # ── Filter ───────────────────────────────────────────────────────────────────
 
 filtered = df[
-    df["window_name"].isin(selected_windows) 
+    df["window_name"].isin(selected_windows)
     & df["asset_class"].isin(selected_sectors)
 ]
 
@@ -160,6 +167,7 @@ date_max = max(WINDOW_BOUNDS[w][1] for w in selected_windows)
 
 st.subheader("Sector Performance by Window")
 
+# Average pct_change across all tickers within each sector / window pair
 sector_avg = (
     filtered.groupby(["window_name", "window_label", "sector_label"], sort=False)["pct_change"]
     .mean()
@@ -180,6 +188,7 @@ sector_global_avg = (
 )
 sector_order = sector_global_avg.index.tolist()
 
+# Grouped bar chart: one cluster per window, one bar per sector
 fig = px.bar(
     sector_avg,
     x="window_label",
@@ -195,6 +204,7 @@ fig = px.bar(
     },
 )
 
+# Style: transparent background, zero-line reference
 fig.update_layout(
     xaxis_tickangle=-10,
     legend_title_text="Sector",
@@ -217,10 +227,10 @@ fig.update_layout(
 fig.add_annotation(
     text="Avg % Change",
     xref="paper", yref="paper",
-    x=-0.01, y=1.07,
+    x=0, y=1.06,
     showarrow=False,
     font=dict(size=13),
-    xanchor="right",
+    xanchor="left",
 )
 
 st.plotly_chart(fig, use_container_width=True)
@@ -305,10 +315,10 @@ fig2.update_layout(
 fig2.add_annotation(
     text="Normalized Price (100 = conflict start)",
     xref="paper", yref="paper",
-    x=0, y=1.06,
+    x=0.22, y=1.07,
     showarrow=False,
     font=dict(size=13),
-    xanchor="left",
+    xanchor="right",
 )
 
 st.plotly_chart(fig2, use_container_width=True)
