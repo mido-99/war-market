@@ -353,8 +353,15 @@ top5    = ticker_avg.nlargest(5,  "avg_pct_change")
 bottom5 = ticker_avg.nsmallest(5, "avg_pct_change")
 
 # Combine and sort bottom-to-top so the chart reads worst → best
-wl = pd.concat([bottom5, top5]).sort_values("avg_pct_change").reset_index(drop=True)
+wl = (
+    pd.concat([bottom5, top5])
+    .sort_values("avg_pct_change", ascending=False)
+    .reset_index(drop=True)
+)
 # drop=True prevents pandas from keeping old row index (e.g idx 42) into a useless data column
+
+# Explicit ticker order — prevents px.bar from regrouping bars by sector color
+ticker_order = wl["ticker"].tolist()
 
 # Horizontal bar chart — colored by sector for easy identification
 fig4 = px.bar(
@@ -365,6 +372,7 @@ fig4 = px.bar(
     color="sector_label",
     color_discrete_map=SECTOR_COLORS,
     text="avg_pct_change",
+    category_orders={"ticker": ticker_order},
     labels={
         "avg_pct_change": "Avg % Change",
         "ticker":         "Ticker",
