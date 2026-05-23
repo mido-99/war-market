@@ -185,3 +185,92 @@ fig.add_annotation(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+
+# ── Chart 2: Normalized price overlay ────────────────────────────────────────
+
+st.subheader("Normalized Price Overlay (100 = Conflict Start)")
+
+# Keep only tickers belonging to the selected sectors
+price_sector = prices_df[prices_df["asset_class"].isin(selected_sectors)].copy()
+
+# Snapshot adj_close on the conflict start date — this becomes the rebase denominator
+rebase = (
+    price_sector[price_sector["date"] == CONFLICT_START][["ticker", "adj_close"]]
+    .rename(columns={"adj_close": "rebase_price"})
+)
+
+# Attach rebase prices and compute normalized index (100 = conflict start)
+price_sector = price_sector.merge(rebase, on="ticker", how="inner")
+price_sector["normalized"] = (
+    price_sector["adj_close"] / price_sector["rebase_price"] * 100
+).round(2)
+
+# Trim to the visible window date range
+price_sector = price_sector[
+    (price_sector["date"] >= date_min) & (price_sector["date"] <= date_max)
+]
+
+# Sector daily average of normalized prices → one smooth line per sector
+sector_norm = (
+    price_sector.groupby(["date", "sector_label"])["normalized"]
+    .mean()
+    .round(2)
+    .reset_index()
+)
+
+# Line chart: one trace per sector, colored consistently
+fig2 = px.line(
+    sector_norm,
+    x="date",
+    y="normalized",
+    color="sector_label",
+    color_discrete_map=SECTOR_COLORS,
+    labels={
+        "date":         "Date",
+        "normalized":   "Normalized Price",
+        "sector_label": "Sector",
+    },
+)
+
+# Draw vertical timeline markers only for events within the visible range
+for ts, label in EVENT_DATES:
+    if date_min <= ts <= date_max:
+        fig2.add_vline(
+            x=ts.value // 10**6,
+            line_dash="dash",
+            line_color="gray",
+            annotation_text=label,
+            annotation_position="top right",
+            annotation_font_size=11,
+        )
+
+# Dotted reference line at 100 (= conflict start level)
+fig2.add_hline(
+    y=100,
+    line_dash="dot",
+    line_color="rgba(180,180,180,0.4)",
+    line_width=1,
+)
+
+# Style: transparent background, consistent with other charts
+fig2.update_layout(
+    plot_bgcolor="rgba(0,0,0,0)",
+    paper_bgcolor="rgba(0,0,0,0)",
+    legend_title_text="Sector",
+    yaxis=dict(title_text=""),
+    margin=dict(t=60),
+    hoverlabel=dict(font_size=14, font_family="Arial, sans-serif"),
+)
+
+# Y-axis label as horizontal annotation (avoids unreadable 90° rotation)
+fig2.add_annotation(
+    text="Normalized Price (100 = conflict start)",
+    xref="paper", yref="paper",
+    x=0, y=1.06,
+    showarrow=False,
+    font=dict(size=13),
+    xanchor="left",
+)
+
+st.plotly_chart(fig2, use_container_width=True)
+
