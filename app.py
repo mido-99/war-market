@@ -48,6 +48,26 @@ SECTOR_COLORS = {
     "Healthcare":         "#F1948A",  # soft pink
 }
 
+# Rebase anchor: all price series normalize to 100 at conflict start
+CONFLICT_START = pd.Timestamp("2025-06-13")
+
+# Exact trading-day boundaries per window — used to slice daily prices
+WINDOW_BOUNDS = {
+    "window_1": (pd.Timestamp("2025-01-02"), pd.Timestamp("2025-06-12")),
+    "window_2": (pd.Timestamp("2025-06-13"), pd.Timestamp("2025-06-24")),
+    "window_3": (pd.Timestamp("2025-06-25"), pd.Timestamp("2026-02-27")),
+    "window_4": (pd.Timestamp("2026-02-28"), pd.Timestamp("2026-04-07")),
+    "window_5": (pd.Timestamp("2026-04-08"), pd.Timestamp("2026-04-30")),
+}
+
+# Key event dates for vertical timeline markers on daily-price charts
+EVENT_DATES = [
+    (pd.Timestamp("2025-06-13"), "12-Day War"),
+    (pd.Timestamp("2025-06-25"), "Inter-conflict"),
+    (pd.Timestamp("2026-02-28"), "2nd Operation"),
+    (pd.Timestamp("2026-04-08"), "Ceasefire"),
+]
+
 
 def get_conn():
     return psycopg2.connect(
@@ -69,6 +89,20 @@ def load_ticker_windows() -> pd.DataFrame:
     return df
 
 
+# Pull full daily adj_close history for all tickers
+@st.cache_data(ttl=300)
+def load_prices() -> pd.DataFrame:
+    conn = get_conn()
+    df = pd.read_sql(
+        "SELECT ticker, date, adj_close, asset_class FROM prices ORDER BY date",
+        conn,
+    )
+    conn.close()
+    df["date"] = pd.to_datetime(df["date"])
+    df["sector_label"] = df["asset_class"].map(SECTOR_LABELS).fillna(df["asset_class"])
+    return df
+
+
 # ── Page config ──────────────────────────────────────────────────────────────
 
 st.set_page_config(
@@ -83,6 +117,7 @@ st.markdown("**US-Iran conflicts 2025–2026 — market impact across asset clas
 # ── Load data ────────────────────────────────────────────────────────────────
 
 df = load_ticker_windows()
+prices_df = load_prices()
 
 all_windows = WINDOW_ORDER
 all_sectors = sorted(df["asset_class"].dropna().unique().tolist())
@@ -116,6 +151,10 @@ filtered = df[
 if filtered.empty:
     st.warning("No data for the current filter selection.")
     st.stop()
+
+# Derive visible date range from selected windows — shared by daily-price charts
+date_min = min(WINDOW_BOUNDS[w][0] for w in selected_windows)
+date_max = max(WINDOW_BOUNDS[w][1] for w in selected_windows)
 
 # ── Chart 1: Sector comparison — avg % change per asset class per window ─────
 
