@@ -192,7 +192,17 @@ date_max = max(WINDOW_BOUNDS[w][1] for w in selected_windows)
 
 # ── Chart 1: Sector comparison — avg % change per asset class per window ─────
 
-st.subheader("Sector Performance by Window")
+st.subheader("📊 Sector Performance by Window")
+st.markdown(
+    """
+Each bar shows the **average % price change** for every ticker in that sector during one conflict window.
+
+- 🟢**Positive bar** → the sector gained on average during that phase
+- 🔴**Negative bar** → the sector lost on average during that phase
+
+Bars within each cluster are sorted by overall cross-window performance — outperformers appear first in the legend.
+"""
+)
 
 # Average pct_change across all tickers within each sector / window pair
 sector_avg = (
@@ -252,7 +262,19 @@ st.plotly_chart(fig, use_container_width=True)
 
 # ── Chart 2: Normalized price overlay ────────────────────────────────────────
 
-st.subheader("Normalized Price Overlay (100 = Conflict Start)")
+st.subheader("📈 Normalized Price Overlay (100 = Conflict Start)")
+st.markdown(
+    r"""
+Think of each line as a **\$100 investment made on the day the conflict started** (13 Jun 2025).
+
+- If the value is **100** → the price is unchanged from conflict start
+- If the value is **115** → your \$100 grew to **\$115** (a +15% gain)
+- If the value is **85** → your \$100 fell to **\$85** (a −15% loss)
+
+Lines show the **sector average** across all its tickers — individual stock noise is smoothed out.
+Dashed lines mark the start of each new conflict phase.
+"""
+)
 
 # Keep only tickers belonging to the selected sectors
 price_sector = prices_df[prices_df["asset_class"].isin(selected_sectors)].copy()
@@ -323,7 +345,22 @@ st.plotly_chart(fig2, use_container_width=True)
 
 # ── Chart 3: VIX spike ───────────────────────────────────────────────────────
 
-st.subheader("VIX Volatility Index")
+st.subheader("😨 VIX Volatility Index")
+st.markdown(
+    """
+VIX — the **"Fear Index"** — measures the volatility that options markets expect over the next 30 days.
+It spikes when investors rush to buy downside protection, and collapses as calm returns.
+
+| VIX Range | Market Mood |
+|-----------|-------------|
+| < 15      | 😴 Calm / complacent |
+| 15 – 25   | 😐 Normal uncertainty |
+| 25 – 40   | 😰 Elevated fear |
+| > 40      | 😱 Panic / crisis territory |
+
+Red dashed lines mark the start of each conflict phase — watch how quickly (or slowly) fear subsides after each event.
+"""
+)
 
 # Isolate VIX rows and trim to the visible window date range
 vix_df = prices_df[
@@ -365,7 +402,16 @@ else:
 
 # ── Chart 4: Winners vs Losers ───────────────────────────────────────────────
 
-st.subheader("Winners & Losers — Top 5 / Bottom 5")
+st.subheader("🏆 Winners & Losers — Top 5 / Bottom 5")
+st.markdown(
+    """
+The **5 biggest gainers** and **5 biggest losers**, averaged across all selected windows and sectors.
+
+- Bar **color** identifies which sector each ticker belongs to
+- The **zero line** divides winners (right) from losers (left)
+- Averages smooth out window-to-window volatility for a cleaner ranking
+"""
+)
 
 # Average pct_change per ticker across all selected windows
 ticker_avg = (
