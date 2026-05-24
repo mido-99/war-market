@@ -1,14 +1,14 @@
-# War Market Analysis
+# 🪖 War Market Analysis
 
 > How do financial markets respond to armed conflict?
 
-This project tracks the price behavior of 80+ US-listed tickers across 12 asset classes during the US-Iran conflict events of 2025–2026. Data is sliced into 5 conflict windows and analyzed for % change, sector rankings, and VIX behavior.
+This project tracks the price behavior of 80+ US-listed tickers across 12 asset classes during the US–Iran conflict events of 2025–2026. Data is sliced into 5 conflict windows and analyzed for % change, sector rankings, normalized price trends, and VIX behavior.
 
-**Status: Phases 1–3 complete. Dashboard (Phase 4) in progress.**
+Status: Phases 1–4 complete ✅
 
 ---
 
-## Conflict Windows
+## ⏱️ Conflict Windows
 
 | Window | Label | Period |
 |--------|-------|--------|
@@ -20,7 +20,7 @@ This project tracks the price behavior of 80+ US-listed tickers across 12 asset 
 
 ---
 
-## Asset Classes
+## 🏭 Asset Classes
 
 | Class | Example Tickers |
 |-------|----------------|
@@ -39,7 +39,7 @@ This project tracks the price behavior of 80+ US-listed tickers across 12 asset 
 
 ---
 
-## Stack
+## 🛠️ Stack
 
 - **Python** — pandas, yfinance
 - **PostgreSQL** — psycopg2
@@ -47,13 +47,13 @@ This project tracks the price behavior of 80+ US-listed tickers across 12 asset 
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 war_market/
 ├── pull_data.py      # Phase 1 — fetch & clean data via yfinance
 ├── analysis.sql      # Phase 3 — window tagging, % change, VIX deep-dive
-├── app.py            # Phase 4 — Streamlit dashboard (in progress)
+├── app.py            # Phase 4 — Streamlit dashboard
 ├── data/
 │   ├── defense.csv
 │   ├── energy.csv
@@ -64,7 +64,7 @@ war_market/
 
 ---
 
-## Setup
+## ⚙️ Setup
 
 **1. Install dependencies**
 
@@ -111,23 +111,36 @@ uv run streamlit run app.py
 
 ---
 
-## Database Schema (simplified)
+## 🗄️ Database Schema (simplified)
 
 ```sql
-prices        (ticker, date, adj_close, asset_class, ...)
-events        (event_name, start_date, end_date)
+prices         (ticker, date, adj_close, asset_class, ...)
+events         (event_name, start_date, end_date)
 ticker_windows (ticker, window_name, pct_change, asset_class, rank_in_class)
 ```
 
 ---
 
-## Roadmap
+## 📊 Dashboard
+
+The Streamlit dashboard (`app.py`) has four interactive charts, all filterable by conflict window and sector via the sidebar:
+
+| # | Chart | What it shows |
+|---|-------|---------------|
+| 1 | **Sector Performance by Window** | Average % price change per sector per conflict phase (bar chart) |
+| 2 | **Normalized Price Overlay** | Daily price series rebased to 100 at conflict start — sector averages with event markers |
+| 3 | **VIX Spike** | VIX daily close across the full timeline with conflict phase markers |
+| 4 | **Winners vs Losers** | Top and bottom individual tickers ranked by % change within the selected window |
+
+---
+
+## 🗺️ Roadmap
 
 - [x] Phase 1 — Pull & clean data (yfinance → CSVs)
 - [x] Phase 2 — Load into PostgreSQL
 - [x] Phase 3 — Window analysis, sector averages, VIX deep-dive
-- [ ] Phase 4 — Streamlit dashboard
+- [x] Phase 4 — Streamlit dashboard
   - [x] Sector performance bar chart
-  - [ ] Winners / losers table per window
-  - [ ] VIX timeline chart
-  - [ ] Ticker drill-down
+  - [x] Normalized price overlay (rebased to conflict start)
+  - [x] VIX timeline chart
+  - [x] Winners vs losers per window
