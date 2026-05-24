@@ -6,7 +6,7 @@ import psycopg2
 import streamlit as st
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()  # no-op on Streamlit Cloud; secrets come from st.secrets
 
 # Human-readable window labels for sidebar display and chart axes
 WINDOW_LABELS = {
@@ -75,15 +75,21 @@ EVENT_DATES = [
 
 # ── DB & data loaders ─────────────────────────────────────────────────────────
 
-# Open a fresh psycopg2 connection using .env credentials
+# Open a fresh psycopg2 connection.
+# On Streamlit Cloud: reads from st.secrets (set via the app's Secrets panel).
+# Locally: falls back to .env via load_dotenv() above.
 def get_conn():
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        port=int(os.getenv("DB_PORT", 5432)),
-        dbname=os.getenv("DB_NAME", "war_market"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD"),
-    )
+    try:
+        s = st.secrets
+        host, port, dbname = s["DB_HOST"], int(s["DB_PORT"]), s["DB_NAME"]
+        user, password = s["DB_USER"], s["DB_PASSWORD"]
+    except (FileNotFoundError, KeyError):
+        host     = os.getenv("DB_HOST", "localhost")
+        port     = int(os.getenv("DB_PORT", 5432))
+        dbname   = os.getenv("DB_NAME", "war_market")
+        user     = os.getenv("DB_USER", "postgres")
+        password = os.getenv("DB_PASSWORD")
+    return psycopg2.connect(host=host, port=port, dbname=dbname, user=user, password=password)
 
 
 # Pull pre-computed % changes and rank per ticker per window
