@@ -154,6 +154,7 @@ st.set_page_config(
 
 st.title("🪖 War Market Analysis")
 st.markdown("**US–Iran conflicts 2025–2026 — market impact across asset classes**")
+st.caption("Data: yfinance · 80+ tickers · 12 sectors · 5 conflict windows")
 
 # ── Load data ────────────────────────────────────────────────────────────────
 
@@ -183,6 +184,12 @@ with st.sidebar:
         format_func=lambda s: SECTOR_LABELS.get(s, s),
     )
 
+    st.divider()
+    st.caption(
+        "Tickers are rebased to 100 at the conflict start date (13 Jun 2025). "
+        "All % changes are price-only (not total-return)."
+    )
+
 # ── Filter ───────────────────────────────────────────────────────────────────
 
 filtered = df[
@@ -197,6 +204,16 @@ if filtered.empty:
 # Derive visible date range from selected windows — shared by daily-price charts
 date_min = min(WINDOW_BOUNDS[w][0] for w in selected_windows)
 date_max = max(WINDOW_BOUNDS[w][1] for w in selected_windows)
+
+# ── Metrics row ──────────────────────────────────────────────────────────────
+
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Sectors selected",  len(selected_sectors))
+m2.metric("Windows selected",  len(selected_windows))
+m3.metric("Date range start",  date_min.strftime("%d %b %Y"))
+m4.metric("Date range end",    date_max.strftime("%d %b %Y"))
+
+st.divider()
 
 # ── Chart 1: Sector comparison — avg % change per asset class per window ─────
 
@@ -265,6 +282,8 @@ fig.add_annotation(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+
+st.divider()
 
 # ── Chart 2: Normalized price overlay ────────────────────────────────────────
 
@@ -342,6 +361,8 @@ fig2.add_annotation(
 
 st.plotly_chart(fig2, use_container_width=True)
 
+st.divider()
+
 # ── Chart 3: VIX spike ───────────────────────────────────────────────────────
 
 st.subheader("😨 VIX Volatility Index")
@@ -391,6 +412,8 @@ if not vix_df.empty:
     st.plotly_chart(fig3, use_container_width=True)
 else:
     st.info("ℹ️ No VIX data for the selected window range.")
+
+st.divider()
 
 # ── Chart 4: Winners vs Losers ───────────────────────────────────────────────
 
@@ -469,3 +492,11 @@ fig4.add_annotation(
 )
 
 st.plotly_chart(fig4, use_container_width=True)
+
+# ── Footer ───────────────────────────────────────────────────────────────────
+
+st.divider()
+st.caption(
+    "Built with Streamlit + Plotly · Data via yfinance · "
+    "All data is for educational and informational purposes only — not financial advice."
+)
