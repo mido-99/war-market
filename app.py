@@ -73,6 +73,8 @@ EVENT_DATES = [
 ]
 
 
+# ── DB & data loaders ─────────────────────────────────────────────────────────
+
 # Open a fresh psycopg2 connection using .env credentials
 def get_conn():
     return psycopg2.connect(
@@ -144,8 +146,8 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("War Market Analysis")
-st.markdown("**US-Iran conflicts 2025–2026 — market impact across asset classes**")
+st.title("🪖 War Market Analysis")
+st.markdown("**US–Iran conflicts 2025–2026 — market impact across asset classes**")
 
 # ── Load data ────────────────────────────────────────────────────────────────
 
@@ -159,17 +161,17 @@ all_sectors = sorted(df["asset_class"].dropna().unique().tolist())
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.header("Filters")
+    st.header("⚙️ Filters")
 
     selected_windows = st.multiselect(
-        "Conflict windows",
+        "📅 Conflict windows",
         options=all_windows,
         default=all_windows,
         format_func=lambda w: WINDOW_LABELS[w],
     )
 
     selected_sectors = st.multiselect(
-        "Sectors",
+        "🏭 Sectors",
         options=all_sectors,
         default=all_sectors,
         format_func=lambda s: SECTOR_LABELS.get(s, s),
@@ -183,7 +185,7 @@ filtered = df[
 ]
 
 if filtered.empty:
-    st.warning("No data for the current filter selection.")
+    st.warning("⚠️ No data for the current filter selection.")
     st.stop()
 
 # Derive visible date range from selected windows — shared by daily-price charts
@@ -253,9 +255,7 @@ fig.add_annotation(
     text="Avg % Change",
     xref="paper", yref="paper",
     x=0, y=1.06,
-    showarrow=False,
-    font=dict(size=13),
-    xanchor="left",
+    showarrow=False, font=dict(size=13), xanchor="left",
 )
 
 st.plotly_chart(fig, use_container_width=True)
@@ -322,12 +322,7 @@ fig2 = px.line(
 add_event_vlines(fig2, date_min, date_max)
 
 # Dotted reference line at 100 (= conflict start level)
-fig2.add_hline(
-    y=100,
-    line_dash="dot",
-    line_color="rgba(180,180,180,0.4)",
-    line_width=1,
-)
+fig2.add_hline(y=100, line_dash="dot", line_color="rgba(180,180,180,0.4)", line_width=1)
 
 apply_base_layout(fig2, legend_title_text="Sector", yaxis=dict(title_text=""))
 
@@ -336,9 +331,7 @@ fig2.add_annotation(
     text="Normalized Price (100 = conflict start)",
     xref="paper", yref="paper",
     x=0.22, y=1.07,
-    showarrow=False,
-    font=dict(size=13),
-    xanchor="right",
+    showarrow=False, font=dict(size=13), xanchor="right",
 )
 
 st.plotly_chart(fig2, use_container_width=True)
@@ -371,12 +364,7 @@ vix_df = prices_df[
 
 if not vix_df.empty:
     # Line chart for VIX daily close
-    fig3 = px.line(
-        vix_df,
-        x="date",
-        y="adj_close",
-        labels={"date": "Date", "adj_close": "VIX"},
-    )
+    fig3 = px.line(vix_df, x="date", y="adj_close", labels={"date": "Date", "adj_close": "VIX"})
 
     # Draw vertical timeline markers only for events within the visible range
     add_event_vlines(fig3, date_min, date_max, line_color="#E74C3C")
@@ -391,14 +379,12 @@ if not vix_df.empty:
         text="VIX Level",
         xref="paper", yref="paper",
         x=-0.05, y=1.07,
-        showarrow=False,
-        font=dict(size=13),
-        xanchor="left",
+        showarrow=False, font=dict(size=13), xanchor="left",
     )
 
     st.plotly_chart(fig3, use_container_width=True)
 else:
-    st.info("No VIX data for the selected window range.")
+    st.info("ℹ️ No VIX data for the selected window range.")
 
 # ── Chart 4: Winners vs Losers ───────────────────────────────────────────────
 
@@ -426,7 +412,7 @@ ticker_avg = (
 top5    = ticker_avg.nlargest(5,  "avg_pct_change")
 bottom5 = ticker_avg.nsmallest(5, "avg_pct_change")
 
-# Combine and sort bottom-to-top so the chart reads worst → best
+# Combine and sort best-to-worst (best appears at top of chart)
 wl = (
     pd.concat([bottom5, top5])
     .sort_values("avg_pct_change", ascending=False)
@@ -473,9 +459,7 @@ fig4.add_annotation(
     text="Avg % Change",
     xref="paper", yref="paper",
     x=0.5, y=1.07,
-    showarrow=False,
-    font=dict(size=13),
-    xanchor="center",
+    showarrow=False, font=dict(size=13), xanchor="center",
 )
 
 st.plotly_chart(fig4, use_container_width=True)
