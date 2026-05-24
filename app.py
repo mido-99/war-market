@@ -109,6 +109,33 @@ def load_prices() -> pd.DataFrame:
     return df
 
 
+# ── Chart helpers ─────────────────────────────────────────────────────────────
+
+# Shared layout: transparent background, consistent hover style, any extra overrides
+def apply_base_layout(fig, **kwargs):
+    layout = dict(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        margin=dict(t=60),
+        hoverlabel=dict(font_size=14, font_family="Arial, sans-serif"),
+    )
+    layout.update(kwargs)
+    fig.update_layout(**layout)
+
+# Dashed vertical markers at each event date within the visible range
+def add_event_vlines(fig, date_min, date_max, *, line_color="gray"):
+    for ts, label in EVENT_DATES:
+        if date_min <= ts <= date_max:
+            fig.add_vline(
+                x=ts.value // 10**6,
+                line_dash="dash",
+                line_color=line_color,
+                annotation_text=label,
+                annotation_position="top right",
+                annotation_font_size=11,
+            )
+
+
 # ── Page config ──────────────────────────────────────────────────────────────
 
 st.set_page_config(
@@ -204,23 +231,11 @@ fig = px.bar(
     },
 )
 
-# Style: transparent background, zero-line reference
-fig.update_layout(
+apply_base_layout(
+    fig,
     xaxis_tickangle=-10,
     legend_title_text="Sector",
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="rgba(0,0,0,0)",
-    yaxis=dict(
-        title_text="",
-        zeroline=True,
-        zerolinecolor="gray",
-        zerolinewidth=1,
-    ),
-    margin=dict(t=60),
-    hoverlabel=dict(
-        font_size=14,
-        font_family="Arial, sans-serif",
-        )
+    yaxis=dict(title_text="", zeroline=True, zerolinecolor="gray", zerolinewidth=1),
 )
 
 # Y-axis label as horizontal annotation (avoids unreadable 90° rotation)
@@ -282,16 +297,7 @@ fig2 = px.line(
 )
 
 # Draw vertical timeline markers only for events within the visible range
-for ts, label in EVENT_DATES:
-    if date_min <= ts <= date_max:
-        fig2.add_vline(
-            x=ts.value // 10**6,
-            line_dash="dash",
-            line_color="gray",
-            annotation_text=label,
-            annotation_position="top right",
-            annotation_font_size=11,
-        )
+add_event_vlines(fig2, date_min, date_max)
 
 # Dotted reference line at 100 (= conflict start level)
 fig2.add_hline(
@@ -301,15 +307,7 @@ fig2.add_hline(
     line_width=1,
 )
 
-# Style: transparent background, consistent with other charts
-fig2.update_layout(
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="rgba(0,0,0,0)",
-    legend_title_text="Sector",
-    yaxis=dict(title_text=""),
-    margin=dict(t=60),
-    hoverlabel=dict(font_size=14, font_family="Arial, sans-serif"),
-)
+apply_base_layout(fig2, legend_title_text="Sector", yaxis=dict(title_text=""))
 
 # Y-axis label as horizontal annotation (avoids unreadable 90° rotation)
 fig2.add_annotation(
@@ -344,31 +342,12 @@ if not vix_df.empty:
     )
 
     # Draw vertical timeline markers only for events within the visible range
-    for ts, label in EVENT_DATES:
-        if date_min <= ts <= date_max:
-            fig3.add_vline(
-                x=ts.value // 10**6,
-                line_dash="dash",
-                line_color="#E74C3C",
-                annotation_text=label,
-                annotation_position="top right",
-                annotation_font_size=11,
-            )
+    add_event_vlines(fig3, date_min, date_max, line_color="#E74C3C")
 
     # Style the VIX line — sky blue stands out against red event markers
     fig3.update_traces(line_color="#5DADE2", line_width=2)
 
-    # Style: transparent background, consistent with other charts
-    fig3.update_layout(
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        yaxis=dict(
-            title_text="",
-            zeroline=False,
-        ),
-        margin=dict(t=60),
-        hoverlabel=dict(font_size=14, font_family="Arial, sans-serif"),
-    )
+    apply_base_layout(fig3, yaxis=dict(title_text="", zeroline=False))
 
     # Y-axis label as horizontal annotation (avoids unreadable 90° rotation)
     fig3.add_annotation(
@@ -435,18 +414,12 @@ fig4.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
 # Zero reference line to clearly separate gainers from losers
 fig4.add_vline(x=0, line_color="gray", line_width=1)
 
-# Style: transparent background, consistent with other charts
-fig4.update_layout(
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="rgba(0,0,0,0)",
+apply_base_layout(
+    fig4,
     legend_title_text="Sector",
     yaxis=dict(title_text=""),
-    xaxis=dict(
-        title_text="",
-        zeroline=False,
-    ),
+    xaxis=dict(title_text="", zeroline=False),
     margin=dict(t=60, r=80),
-    hoverlabel=dict(font_size=14, font_family="Arial, sans-serif"),
 )
 
 # X-axis label as top-center annotation
