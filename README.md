@@ -4,7 +4,7 @@
 
 This project tracks the price behavior of 80+ US-listed tickers across 12 asset classes during the US–Iran conflict events of 2025–2026. Data is sliced into 5 conflict windows and analyzed for % change, sector rankings, normalized price trends, and VIX behavior.
 
-Status: Phases 1–5 complete ✅
+Status: Phases 1–5 complete ✅ &nbsp;|&nbsp; **[Live Dashboard →](https://war-market.streamlit.app/)**
 
 ---
 
