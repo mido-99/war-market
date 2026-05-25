@@ -500,3 +500,27 @@ st.caption(
     "Built with Streamlit + Plotly · Data via yfinance · "
     "All data is for educational and informational purposes only — not financial advice."
 )
+
+# ── Ticker reference ─────────────────────────────────────────────────────────
+
+TICKER_REFERENCE = {
+    "Defense":            ["LMT", "RTX", "NOC", "GD", "HII", "TDG", "LDOS", "BWXT", "BA"],
+    "Drones & Autonomy":  ["AVAV", "KTOS", "PLTR", "LHX", "RCAT", "AI", "IRDM"],
+    "Cybersecurity":      ["CRWD", "PANW", "CIBR", "FTNT", "ZS", "S", "OKTA"],
+    "Energy":             ["XOM", "CVX", "USO", "CL=F", "CCJ", "SLB", "HAL", "BP", "SHEL"],
+    "Airlines":           ["DAL", "UAL", "AAL", "LUV", "ALK", "RYAAY"],
+    "Shipping":           ["HPGLY", "MATX", "FRO", "ZIM", "SBLK", "DSX", "DAC"],
+    "Agriculture & Food": ["ADM", "BG", "NTR", "CF", "MOS", "ICL", "CTVA", "DE"],
+    "Critical Minerals":  ["MP", "ALB", "SQM", "FCX", "RIO", "UUUU", "DNN", "LEU", "LAC"],
+    "Safe Havens":        ["GLD", "TLT", "BTC-USD", "SLV", "AGG", "SHY", "UUP", "ETH-USD"],
+    "Broad Market":       ["SPY", "QQQ", "^VIX", "DIA", "IWM", "EEM"],
+    "Technology":         ["AAPL", "MSFT", "NVDA", "TSLA", "META", "GOOGL", "AMZN", "AMD"],
+    "Healthcare":         ["JNJ", "PFE", "UNH", "MRK", "ABT", "ABBV", "AMGN", "MDT"],
+}
+
+with st.expander("📋 Ticker Reference — full list by sector"):
+    cols = st.columns(3)
+    for i, (sector, tickers) in enumerate(TICKER_REFERENCE.items()):
+        with cols[i % 3]:
+            st.markdown(f"**{sector}**")
+            st.caption("  ·  ".join(tickers))
