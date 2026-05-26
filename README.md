@@ -94,7 +94,13 @@ Fetches ~330 trading days per ticker and writes CSVs to `data/`.
 
 **4. Load into PostgreSQL**
 
-Create the database and run schema migrations, then bulk-insert the CSVs into the `prices` table via psycopg2. Seed the `events` table with the 4 conflict dates.
+Create the database and run schema migrations, then:
+
+```bash
+uv run python load_db.py
+```
+
+Bulk-inserts the CSVs into the `prices` table via psycopg2 and seeds the `events` table with the 4 conflict dates.
 
 **5. Run analysis**
 
